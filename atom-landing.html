@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atom — Own Your Workspace. Forever.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #ffffff;
+    --bg2:     #ffffff;
+    --bg3:     #f4f6ff;
+    --border:  rgba(0,0,0,0.09);
+    --border2: rgba(0,0,0,0.14);
+    --text:    #0f0f1a;
+    --muted:   #6b6b90;
+    --accent:  #4a4ac8;
+    --accent2: #5b5bd6;
+    --glow:    rgba(74,74,200,0.18);
+    --orange:  #e8600a;
+    --mint:    #0f9e6e;
+    --red:     #c53030;
+    --card-shadow: 0 2px 16px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 48px;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; color: var(--text); }
+  .nav-logo span { color: var(--accent2); }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; transition: color .2s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a[href="#features"] { cursor: pointer; }
+  .nav-right { display: flex; align-items: center; gap: 14px; }
+  .nav-hint { font-size: 13px; color: var(--mint); font-weight: 600; }
+  .nav-cta {
+    background: var(--accent); color: #fff; border: none;
+    padding: 10px 22px; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all .2s;
+  }
+  .nav-cta:hover { background: var(--accent2); transform: translateY(-1px); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 130px 24px 80px;
+    position: relative; overflow: hidden;
+  }
+  .blob { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; }
+  .b1 { width: 700px; height: 480px; background: radial-gradient(ellipse, rgba(91,91,214,0.08) 0%, transparent 70%); top: -60px; left: 50%; transform: translateX(-50%); }
+  .b2 { width: 320px; height: 320px; background: radial-gradient(circle, rgba(15,158,110,0.07) 0%, transparent 70%); bottom: 80px; right: 0; }
+  .b3 { width: 280px; height: 280px; background: radial-gradient(circle, rgba(74,74,200,0.05) 0%, transparent 70%); bottom: 60px; left: 0; }
+
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes pulse    { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+
+  /* animated cycling words */
+  @keyframes wordCycle {
+    0%   { opacity:0; transform:translateX(-50%) translateY(20px); }
+    10%  { opacity:1; transform:translateX(-50%) translateY(0); }
+    30%  { opacity:1; transform:translateX(-50%) translateY(0); }
+    40%  { opacity:0; transform:translateX(-50%) translateY(-20px); }
+    100% { opacity:0; transform:translateX(-50%) translateY(-20px); }
+  }
+  @keyframes bgShimmer {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(15,158,110,0.09); border: 1px solid rgba(15,158,110,0.28);
+    padding: 6px 16px; border-radius: 100px;
+    font-size: 12px; font-weight: 500; color: var(--mint);
+    margin-bottom: 28px; animation: fadeUp 0.6s ease both;
+  }
+  .bdot { width: 6px; height: 6px; border-radius: 50%; background: var(--mint); animation: pulse 2s infinite; }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(46px, 7vw, 86px);
+    font-weight: 800; line-height: 1.07; letter-spacing: -2.5px;
+    max-width: 860px; color: var(--text);
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+
+  /* animated phrase block */
+  .hero-animated-line {
+    display: block;
+    height: clamp(56px, 8.5vw, 100px);
+    overflow: visible;
+    position: relative;
+    margin-top: 8px;
+  }
+  .word-cycle {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  .word-cycle .word {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%) translateY(20px);
+    opacity: 0;
+    white-space: nowrap;
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(46px, 7vw, 86px);
+    font-weight: 800;
+    letter-spacing: -2.5px;
+    line-height: 1.07;
+    background: linear-gradient(135deg, #4a4ac8 0%, #0ea5b0 40%, #22c7a0 70%, #4a4ac8 100%);
+    background-size: 250%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .word-cycle .word:nth-child(1) { animation: wordCycle 14s 0s   ease infinite, bgShimmer 3s linear infinite; }
+  .word-cycle .word:nth-child(2) { animation: wordCycle 14s 3.5s ease infinite, bgShimmer 3s linear infinite; }
+  .word-cycle .word:nth-child(3) { animation: wordCycle 14s 7s   ease infinite, bgShimmer 3s linear infinite; }
+  .word-cycle .word:nth-child(4) { animation: wordCycle 14s 10.5s ease infinite, bgShimmer 3s linear infinite; }
+
+  .hero-sub {
+    margin-top: 24px; font-size: 18px; color: var(--muted);
+    max-width: 540px; line-height: 1.75;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+  .hero-pills {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+    margin-top: 28px; animation: fadeUp 0.7s 0.25s ease both;
+  }
+  .pill {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 100px; padding: 6px 14px;
+    font-size: 13px; color: var(--muted);
+    box-shadow: var(--card-shadow);
+  }
+  .hero-actions {
+    margin-top: 36px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+    animation: fadeUp 0.7s 0.3s ease both;
+  }
+  .btn-primary {
+    background: var(--accent); color: #fff; padding: 14px 32px; border-radius: 12px;
+    font-size: 15px; font-weight: 500; cursor: pointer; border: none;
+    font-family: 'DM Sans', sans-serif;
+    box-shadow: 0 4px 24px var(--glow); transition: all .2s; text-decoration: none; display: inline-block;
+  }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-2px); box-shadow: 0 8px 32px var(--glow); }
+  .btn-secondary {
+    background: var(--bg2); color: var(--text); padding: 14px 32px; border-radius: 12px;
+    font-size: 15px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border2); font-family: 'DM Sans', sans-serif;
+    transition: all .2s; text-decoration: none; display: inline-block;
+    box-shadow: var(--card-shadow);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .hero-sub2 { font-size: 13px; color: var(--muted); margin-top: 14px; animation: fadeUp 0.7s 0.35s ease both; }
+  .hero-sub2 strong { color: var(--mint); font-weight: 600; }
+
+  /* ── MOCKUP ── */
+  .hero-mockup {
+    margin-top: 64px; width: 100%; max-width: 920px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.06);
+    animation: fadeUp 0.9s 0.4s ease both;
+  }
+  .mbar {
+    background: var(--bg3); padding: 13px 20px;
+    display: flex; align-items: center; gap: 7px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mdot { width: 12px; height: 12px; border-radius: 50%; }
+  .d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+  .murl {
+    margin-left: 16px; background: rgba(0,0,0,0.05);
+    border-radius: 6px; padding: 4px 18px; font-size: 12px; color: var(--muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .murl-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mint); }
+  .minner { display: grid; grid-template-columns: 175px 1fr; height: 400px; }
+  .msidebar {
+    background: var(--bg3); border-right: 1px solid var(--border);
+    padding: 20px 14px; display: flex; flex-direction: column;
+  }
+  .mlogo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; color: var(--text); margin-bottom: 22px; padding: 0 8px; }
+  .mnav { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+  .mnav.a { background: rgba(74,74,200,0.1); color: var(--accent); font-weight: 500; }
+  .msec { font-size: 9px; color: var(--muted); letter-spacing: 1px; padding: 10px 10px 5px; text-transform: uppercase; }
+  .moffline { margin-top: auto; background: rgba(15,158,110,0.08); border: 1px solid rgba(15,158,110,0.2); border-radius: 8px; padding: 6px 10px; font-size: 10px; color: var(--mint); display: flex; align-items: center; gap: 5px; }
+  .mmain { padding: 22px 26px; overflow: hidden; background: var(--bg2); }
+  .mgreet { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; color: var(--text); margin-bottom: 3px; }
+  .msub { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+  .minput {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 10px; padding: 9px 14px; font-size: 12px; color: var(--muted);
+    margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .mplus { background: var(--accent); color: #fff; border-radius: 6px; padding: 3px 8px; font-size: 16px; }
+  .mst { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .mempty { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 28px; text-align: center; color: var(--muted); font-size: 11px; }
+
+  /* ── SECTION BASE ── */
+  .sec-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--accent); letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 16px; font-weight: 600;
+    background: rgba(74,74,200,0.07); border: 1px solid rgba(74,74,200,0.18);
+    padding: 4px 12px; border-radius: 100px;
+  }
+  .sec-h { font-family: 'Syne', sans-serif; font-size: clamp(30px, 4vw, 52px); font-weight: 800; line-height: 1.1; letter-spacing: -1.5px; color: var(--text); max-width: 600px; }
+  .sec-p { color: var(--muted); font-size: 17px; max-width: 480px; margin-top: 14px; line-height: 1.7; }
+
+  /* ── MANIFESTO ── */
+  .manifesto { padding: 100px 24px; max-width: 900px; margin: 0 auto; text-align: center; }
+  .manifesto .sec-label { background: rgba(197,48,48,0.07); border-color: rgba(197,48,48,0.2); color: var(--red); }
+  .manifesto h2 { font-family: 'Syne', sans-serif; font-size: clamp(30px, 4.5vw, 52px); font-weight: 800; letter-spacing: -1.5px; color: var(--text); margin: 16px auto 0; }
+  .manifesto > p { color: var(--muted); font-size: 17px; max-width: 600px; margin: 18px auto 0; line-height: 1.75; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 52px; text-align: left; }
+  .vs-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 28px; box-shadow: var(--card-shadow); }
+  .vs-card.bad { border-color: rgba(197,48,48,0.18); background: rgba(197,48,48,0.02); }
+  .vs-card.good { border-color: rgba(15,158,110,0.25); background: rgba(15,158,110,0.03); }
+  .vs-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 17px; margin-bottom: 16px; }
+  .vs-card.bad .vs-title { color: var(--red); }
+  .vs-card.good .vs-title { color: var(--mint); }
+  .vs-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; font-size: 14px; color: var(--muted); }
+
+  /* ── FEATURES ── */
+  .features-wrap { padding: 100px 24px; max-width: 1100px; margin: 0 auto; }
+  .fg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 52px; }
+  .fc {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 28px; transition: all .3s;
+    position: relative; overflow: hidden; box-shadow: var(--card-shadow);
+  }
+  .fc::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0; transition: opacity .3s; }
+  .fc:hover { border-color: rgba(74,74,200,0.3); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
+  .fc:hover::before { opacity: 1; }
+  .fi { width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 18px; }
+  .fi1{background:rgba(74,74,200,0.1)}.fi2{background:rgba(232,96,10,0.1)}.fi3{background:rgba(15,158,110,0.1)}.fi4{background:rgba(202,138,4,0.1)}.fi5{background:rgba(190,18,60,0.1)}.fi6{background:rgba(2,132,199,0.1)}
+  .ft { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 17px; color: var(--text); margin-bottom: 8px; }
+  .fd { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+  /* ── AI / BYOK ── */
+  .byok-wrap {
+    padding: 100px 24px;
+    background: var(--bg3);
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    overflow: hidden; position: relative;
+  }
+  .byok-glow { position: absolute; width: 500px; height: 500px; border-radius: 50%; background: radial-gradient(circle, rgba(74,74,200,0.07) 0%, transparent 70%); right: -80px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+  .byok-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
+  .byok-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: var(--card-shadow); }
+  .byok-header { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .byok-icon { width: 38px; height: 38px; border-radius: 11px; background: linear-gradient(135deg, var(--accent), #22c7a0); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .byok-t { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; color: var(--text); }
+  .byok-s { font-size: 11px; color: var(--muted); }
+  .model-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .model-item { display: flex; align-items: center; justify-content: space-between; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+  .model-name { font-size: 13px; color: var(--text); font-weight: 500; }
+  .mtag { font-size: 10px; background: rgba(74,74,200,0.1); color: var(--accent); border-radius: 6px; padding: 2px 8px; font-weight: 500; }
+  .mtag.g{background:rgba(15,158,110,0.1);color:var(--mint)}.mtag.o{background:rgba(232,96,10,0.1);color:var(--orange)}.mtag.n{background:rgba(0,0,0,0.06);color:var(--muted)}
+  .key-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .key-lock { margin-left: auto; color: var(--mint); }
+  .priv-note { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--mint); background: rgba(15,158,110,0.07); border: 1px solid rgba(15,158,110,0.2); border-radius: 8px; padding: 10px 14px; font-weight: 500; }
+
+  /* ── WHO ── */
+  .who-wrap { padding: 100px 24px; max-width: 1100px; margin: 0 auto; }
+  .who-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; }
+  .wc { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 28px; box-shadow: var(--card-shadow); }
+  .we { font-size: 32px; margin-bottom: 16px; }
+  .wt { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 17px; color: var(--text); margin-bottom: 10px; }
+  .wd { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+  /* ── PRICING ── */
+  .pricing-wrap { padding: 100px 24px; max-width: 900px; margin: 0 auto; text-align: center; }
+  .pricing-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 56px; text-align: left; }
+  .pc {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 24px; padding: 36px;
+    position: relative; transition: all .3s; box-shadow: var(--card-shadow);
+  }
+  .pc.feat {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(74,74,200,0.08), 0 12px 48px rgba(74,74,200,0.14);
+    background: linear-gradient(145deg, rgba(74,74,200,0.04) 0%, var(--bg2) 60%);
+  }
+  .pc:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.1); }
+  .pop-badge { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; padding: 4px 16px; border-radius: 100px; white-space: nowrap; }
+  .stu-badge { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--mint); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; padding: 4px 16px; border-radius: 100px; white-space: nowrap; }
+  .pplan { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; color: var(--text); margin-bottom: 8px; }
+  .pdesc { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+  .prow { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 6px; }
+  .pwas { font-size: 18px; color: var(--muted); text-decoration: line-through; font-weight: 500; }
+  .pnow { font-family: 'Syne', sans-serif; font-size: 56px; font-weight: 800; letter-spacing: -2px; line-height: 1; }
+  .pc.feat .pnow { color: var(--accent); }
+  .pstu .pnow { color: var(--mint); }
+  .ponce { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  .ponce strong { color: var(--text); }
+  .poffer { display: inline-flex; align-items: center; gap: 6px; background: rgba(232,96,10,0.08); border: 1px solid rgba(232,96,10,0.22); color: var(--orange); border-radius: 8px; padding: 4px 12px; font-size: 12px; font-weight: 500; margin-bottom: 24px; }
+  .poffer.g { background: rgba(15,158,110,0.08); border-color: rgba(15,158,110,0.22); color: var(--mint); }
+  .pfeats { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+  .pfeats li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--muted); }
+  .pfeats li::before { content: '✓'; color: var(--mint); font-weight: 700; flex-shrink: 0; }
+  .btn-plan { width: 100%; padding: 14px; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; border: none; transition: all .2s; text-align: center; display: block; text-decoration: none; }
+  .bpp { background: var(--accent); color: #fff; box-shadow: 0 4px 20px var(--glow); }
+  .bpp:hover { background: var(--accent2); transform: translateY(-1px); }
+  .bpm { background: var(--mint); color: #fff; }
+  .bpm:hover { opacity: .9; transform: translateY(-1px); }
+  .p-note { margin-top: 28px; font-size: 13px; color: var(--muted); }
+  .p-note strong { color: var(--text); }
+
+  /* ── CTA ── */
+  .cta {
+    padding: 120px 24px; text-align: center; position: relative; overflow: hidden;
+    background: linear-gradient(160deg, rgba(74,74,200,0.05) 0%, var(--bg) 50%, rgba(15,158,110,0.05) 100%);
+  }
+  .cta-bg { position: absolute; width: 800px; height: 600px; border-radius: 50%; background: radial-gradient(ellipse, rgba(74,74,200,0.08) 0%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; }
+  .cta h2 { font-family: 'Syne', sans-serif; font-size: clamp(34px, 5vw, 62px); font-weight: 800; letter-spacing: -2px; color: var(--text); max-width: 700px; margin: 0 auto 20px; position: relative; }
+  .cta p { color: var(--muted); font-size: 17px; max-width: 460px; margin: 0 auto 36px; position: relative; }
+  .cta-acts { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; position: relative; }
+  .cta-micro { font-size: 13px; color: var(--muted); margin-top: 16px; position: relative; }
+  .cta-micro span { color: var(--mint); font-weight: 600; }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 36px 48px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;
+    background: var(--bg2);
+  }
+  .flogo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; color: var(--text); }
+  .flogo span { color: var(--accent2); }
+  .flinks { display: flex; gap: 28px; list-style: none; }
+  .flinks a { color: var(--muted); text-decoration: none; font-size: 13px; transition: color .2s; }
+  .flinks a:hover { color: var(--text); }
+  .ftag { font-size: 12px; color: var(--muted); }
+  .coming-soon {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.5px;
+    background: rgba(74,74,200,0.08); color: var(--accent);
+    border: 1px solid rgba(74,74,200,0.18);
+    border-radius: 4px; padding: 1px 5px;
+    vertical-align: middle; margin-left: 4px;
+    text-transform: uppercase; white-space: nowrap;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav { padding: 14px 20px; }
+    .nav-links, .nav-hint { display: none; }
+    .vs-grid, .byok-inner, .pricing-grid, .who-grid, .fg { grid-template-columns: 1fr; }
+    footer { flex-direction: column; text-align: center; }
+    .minner { grid-template-columns: 1fr; }
+    .msidebar { display: none; }
+    .hero-animated-line { height: clamp(50px, 12vw, 70px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Atom<span>.</span></div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#ai">AI Hub</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <div class="nav-right">
+    <span class="nav-hint">🔥 Launch offer — $10 one-time</span>
+    <button class="nav-cta" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Get Atom</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+
+  <h1>
+    Your workspace.<br>
+    <span class="hero-animated-line">
+      <span class="word-cycle" aria-label="Fully Private. Offline. Personalized. Forever Yours.">
+        <span class="word">Fully Private.</span>
+        <span class="word">Offline.</span>
+        <span class="word">Personalized.</span>
+        <span class="word">Forever Yours.</span>
+      </span>
+    </span>
+  </h1>
+
+  <p class="hero-sub">Atom is a fully offline, private productivity app — tasks, projects, calendar, boards, and a personalized AI assistant. Pay once. Own it forever. Your data never leaves your device.</p>
+
+  <div class="hero-pills">
+    <span class="pill">🔒 Fully private</span>
+    <span class="pill">📵 Works offline</span>
+    <span class="pill">🤖 Bring your own AI key</span>
+    <span class="pill">⚡ One-time payment</span>
+    <span class="pill">☁️ No cloud. Ever.</span>
+  </div>
+
+  <div class="hero-actions">
+    <a href="#pricing" class="btn-primary" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'});return false;">Get Atom — $10 →</a>
+    <a href="#features" class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'});return false;">See features</a>
+  </div>
+  <p class="hero-sub2">Was <s>$29</s> · Now <strong>$10</strong> · Students get it for <strong>$5</strong> · One-time, no subscriptions ever</p>
+
+  <!-- APP MOCKUP -->
+  <div class="hero-mockup">
+    <div class="mbar">
+      <div class="mdot d1"></div><div class="mdot d2"></div><div class="mdot d3"></div>
+      <div class="murl"><span class="murl-dot"></span> Atom · Running locally · No internet required</div>
+    </div>
+    <div class="minner">
+      <div class="msidebar">
+        <div class="mlogo">Atom<span style="color:var(--accent)">.</span></div>
+        <div class="mnav a">🏠 Dashboard</div>
+        <div class="mnav">📁 Projects</div>
+        <div class="mnav">✅ Tasks</div>
+        <div class="mnav">📅 Calendar</div>
+        <div class="msec">Tools</div>
+        <div class="mnav">🤖 AI Hub</div>
+        <div class="mnav">📋 Boards</div>
+        <div class="mnav">🔍 Search</div>
+        <div class="mnav">⚙️ Settings</div>
+        <div class="moffline"><span>●</span> Offline · Secure</div>
+      </div>
+      <div class="mmain">
+        <div class="mgreet">Good morning, User</div>
+        <div class="msub">You have <strong>0 tasks</strong> pending review today.</div>
+        <div class="minput">What needs to be done? Press Enter to add task <div class="mplus">+</div></div>
+        <div class="mst"><span style="color:var(--orange)">⚡</span> Focus Queue <span style="margin-left:auto;font-size:11px;color:var(--accent);font-weight:400">View All</span></div>
+        <div class="mempty"><div style="font-size:20px;margin-bottom:6px;opacity:.3">✓</div>All caught up! No high priority tasks.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MANIFESTO -->
+<section class="manifesto">
+  <div class="sec-label" style="background:rgba(197,48,48,0.07);border-color:rgba(197,48,48,0.2);color:var(--red)">The SaaS Problem</div>
+  <h2>Tired of renting your own tools?</h2>
+  <p>Most productivity apps charge you every month — forever. They store your private data on their servers. They break when you lose WiFi. Atom is different.</p>
+  <div class="vs-grid">
+    <div class="vs-card bad">
+      <div class="vs-title">❌ Typical SaaS apps</div>
+      <div class="vs-item">💸 $10–$25/month forever — you never actually own it</div>
+      <div class="vs-item">☁️ Your data lives on someone else's servers</div>
+      <div class="vs-item">📶 Breaks the moment you lose internet</div>
+      <div class="vs-item">🔑 AI locked to their model at their price</div>
+      <div class="vs-item">📈 Price can increase anytime they want</div>
+    </div>
+    <div class="vs-card good">
+      <div class="vs-title">✅ Atom</div>
+      <div class="vs-item">💰 Pay once ($10), own it forever — zero recurring bills</div>
+      <div class="vs-item">🔒 All data stays on your device. Always.</div>
+      <div class="vs-item">📵 Fully offline — works anywhere, no WiFi needed</div>
+      <div class="vs-item">🤖 Bring your own AI key — use any model you choose</div>
+      <div class="vs-item">🛡️ Your price is locked in. Forever.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-wrap" id="features">
+  <div class="sec-label">What's inside</div>
+  <h2 class="sec-h">Everything you need. Nothing you don't.</h2>
+  <p class="sec-p">A complete productivity suite, built offline-first, designed to stay out of your way.</p>
+  <div class="fg">
+    <div class="fc">
+      <div class="fi fi1">✅</div>
+      <div class="ft">Tasks & Focus Queue</div>
+      <div class="fd">Inbox, Today, Upcoming, Someday views. Auto-prioritized Focus Queue keeps you on what matters most — no internet needed.</div>
+    </div>
+    <div class="fc">
+      <div class="fi fi2">📁</div>
+      <div class="ft">Projects</div>
+      <div class="fd">Organize goals into structured projects with milestones and tasks. All stored locally — private by design.</div>
+    </div>
+    <div class="fc">
+      <div class="fi fi3">📅</div>
+      <div class="ft">Calendar</div>
+      <div class="fd">Full monthly calendar with event scheduling. Your schedule stays on your machine — no Google, no Outlook, no cloud sync.</div>
+    </div>
+    <div class="fc">
+      <div class="fi fi4">📋</div>
+      <div class="ft">Boards</div>
+      <div class="fd">Kanban-style boards for visual planning. Drag tasks through custom columns — your workflow, your machine.</div>
+    </div>
+    <div class="fc">
+      <div class="fi fi5">🤖</div>
+      <div class="ft">Personalized AI Assistant (BYOK)</div>
+      <div class="fd">A fully personalized AI assistant + built-in AI agents. Plug in any model with your own key. Atom never touches your data or key.</div>
+    </div>
+    <div class="fc">
+      <div class="fi fi6">📊</div>
+      <div class="ft">Workload Forecast</div>
+      <div class="fd">Visualize your week's task density. Know which days are heavy before they arrive. Manage capacity, prevent burnout.</div>
+    </div>
+  </div>
+</section>
+
+<!-- AI / BYOK -->
+<section class="byok-wrap" id="ai">
+  <div class="byok-glow"></div>
+  <div class="byok-inner">
+    <div>
+      <div class="sec-label">AI Hub</div>
+      <h2 class="sec-h">Your personalized AI assistant. Your key. Your rules.</h2>
+      <p class="sec-p" style="margin-top:14px">Atom's AI Hub is fully model-agnostic. Bring your own API key from any provider — OpenAI, Anthropic, Gemini, Mistral, or any OpenAI-compatible endpoint. Your key goes directly from your device to the AI provider. Atom never sees it, stores it, or sends it anywhere.</p>
+      <p class="sec-p" style="margin-top:12px">Use built-in AI agents or your personalized AI assistant for planning, writing, debugging, and more — all inside your offline workspace.</p>
+    </div>
+    <div class="byok-card">
+      <div class="byok-header">
+        <div class="byok-icon">🤖</div>
+        <div>
+          <div class="byok-t">AI Hub · Bring Your Own Key</div>
+          <div class="byok-s">Any model · Stays on your device</div>
+        </div>
+      </div>
+      <div class="model-list">
+        <div class="model-item"><span class="model-name">ChatGPT</span><span class="mtag">OpenAI</span></div>
+        <div class="model-item"><span class="model-name">Claude</span><span class="mtag o">Anthropic</span></div>
+        <div class="model-item"><span class="model-name">Gemini</span><span class="mtag g">Google</span></div>
+        <div class="model-item"><span class="model-name">Mistral · Llama · Any OpenAI-compatible</span><span class="mtag n">Custom</span></div>
+      </div>
+      <div class="key-input">🔑 <span>sk-••••••••••••••••••••••••••••••••</span><span class="key-lock">🔒</span></div>
+      <div class="priv-note">✓ Your key is stored locally only. Atom never reads or transmits it.</div>
+    </div>
+  </div>
+</section>
+
+<!-- WHO -->
+<section class="who-wrap">
+  <div class="sec-label">Who it's for</div>
+  <h2 class="sec-h">Built for people tired of renting their tools</h2>
+  <div class="who-grid">
+    <div class="wc">
+      <div class="we">🎓</div>
+      <div class="wt">Students</div>
+      <div class="wd">Manage assignments, projects, and deadlines without a monthly bill. Get Atom for just $5 — lifetime access, no strings attached.</div>
+    </div>
+    <div class="wc">
+      <div class="we">💼</div>
+      <div class="wt">Professionals</div>
+      <div class="wd">Run your projects, tasks, and calendar in a private, offline-first workspace. No corporate server storing your work history.</div>
+    </div>
+    <div class="wc">
+      <div class="we">🚀</div>
+      <div class="wt">Builders & Freelancers</div>
+      <div class="wd">Solo founders, developers, and creators who want full control over their tools, their AI model, and their data. Pay once, done forever.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-wrap" id="pricing">
+  <div class="sec-label" style="margin: 0 auto 16px">Simple pricing</div>
+  <h2 class="sec-h" style="max-width:100%;text-align:center">One price. Yours forever.</h2>
+  <p class="sec-p" style="max-width:480px;margin:14px auto 0;text-align:center">No monthly fees. No subscriptions. No price hikes. Buy once, use forever — even fully offline.</p>
+
+  <div class="pricing-grid">
+    <!-- PRO -->
+    <div class="pc feat">
+      <div class="pop-badge">🔥 Most Popular — 66% off</div>
+      <div class="pplan">Pro</div>
+      <div class="pdesc">For professionals, freelancers, and builders who want the full Atom experience with zero recurring cost.</div>
+      <div class="prow"><span class="pwas">$29</span><span class="pnow">$10</span></div>
+      <div class="ponce">One-time payment · <strong>Lifetime access</strong></div>
+      <div class="poffer">⚡ Limited launch offer — ends soon</div>
+      <ul class="pfeats">
+        <li>Full offline workspace — no internet needed</li>
+        <li>Tasks, Projects, Calendar, Boards</li>
+        <li>AI Hub with BYOK (any model/provider)</li>
+        <li>Built-in AI agents + personalized AI assistant</li>
+        <li>Workload Forecast & Focus Queue</li>
+        <li>All future updates included</li>
+        <li>100% private — data never leaves your device</li>
+      </ul>
+      <a href="#" class="btn-plan bpp">Get Atom Pro — $10</a>
+    </div>
+
+    <!-- STUDENT -->
+    <div class="pc pstu">
+      <div class="stu-badge">🎓 Student Pricing</div>
+      <div class="pplan">Student</div>
+      <div class="pdesc">Every feature of Atom Pro at half the price. Because students shouldn't have to pay monthly just to stay organized.</div>
+      <div class="prow"><span class="pwas">$10</span><span class="pnow">$5</span></div>
+      <div class="ponce">One-time payment · <strong>Lifetime access</strong></div>
+      <div class="poffer g">🎓 Student deal — just $5</div>
+      <ul class="pfeats">
+        <li>Everything in Pro — same full feature set</li>
+        <li>Full offline workspace — works anywhere</li>
+        <li>AI Hub with BYOK (any model/provider)</li>
+        <li>Built-in AI agents + personalized AI assistant</li>
+        <li>All future updates included</li>
+        <li>Perfect for studying and staying organized, offline</li>
+      </ul>
+      <a href="#" class="btn-plan bpm">Get Student Access — $5</a>
+    </div>
+  </div>
+
+  <p class="p-note">🔒 Secure checkout · No questions asked</p>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="cta-bg"></div>
+  <h2>Stop renting. Start owning.</h2>
+  <p>Join students and professionals who chose to own their tools — not subscribe to them.</p>
+  <div class="cta-acts">
+    <a href="#pricing" class="btn-primary" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'});return false;">Get Atom for $10 →</a>
+    <a href="#features" class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'});return false;">See all features</a>
+  </div>
+  <p class="cta-micro">Students: <span>$5 lifetime access</span> · Was $29 · Limited launch offer</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="flogo">Atom<span>.</span></div>
+  <ul class="flinks">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#privacy">Privacy Policy <span class="coming-soon">Soon</span></a></li>
+    <li><a href="#contact">Contact <span class="coming-soon">Soon</span></a></li>
+  </ul>
+  <div class="ftag">© 2026 Atom · Offline. Private. Yours.</div>
+</footer>
+
+</body>
+<script>
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
+      if (!href || href === '#') return; // skip bare # links
+      const target = document.querySelector(href);
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+</script>
+</html>
